@@ -1,11 +1,11 @@
-# Dockerfile simplifié pour ERPNext sur Railway
+# Dockerfile fonctionnel pour ERPNext sur Railway
 FROM python:3.11-slim
 
 # Variables d'environnement
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Installer les dépendances système essentielles
+# Installer toutes les dépendances nécessaires
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     libssl-dev \
     pkg-config \
+    redis-server \
+    mariadb-server \
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Node.js 18
@@ -24,14 +27,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Installer Yarn
 RUN npm install -g yarn
 
-# Créer un utilisateur frappe
+# Créer utilisateur frappe
 RUN useradd -m -s /bin/bash frappe
 
-# Copier le script de démarrage AVANT de changer d'utilisateur
-COPY start.sh /home/frappe/start.sh
-RUN chmod +x /home/frappe/start.sh
+# Copier le script de démarrage
+COPY start-working.sh /start.sh
+RUN chmod +x /start.sh
 
-# Changer d'utilisateur et configurer l'environnement
+# Changer d'utilisateur
 USER frappe
 WORKDIR /home/frappe
 
@@ -41,12 +44,8 @@ RUN pip3 install --user frappe-bench
 # Ajouter au PATH
 ENV PATH="/home/frappe/.local/bin:$PATH"
 
-# Créer le répertoire de travail
-RUN mkdir -p /home/frappe/erpnext-app
-WORKDIR /home/frappe/erpnext-app
-
 # Exposer le port
 EXPOSE 8000
 
-# Démarrer avec le script
-CMD ["/home/frappe/start.sh"]
+# Démarrer
+CMD ["/start.sh"]

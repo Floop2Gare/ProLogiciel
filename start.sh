@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Script de démarrage ERPNext pour Railway
 echo "🚀 Démarrage d'ERPNext sur Railway..."
 
 # Variables d'environnement Railway
@@ -10,7 +9,7 @@ export DB_PASSWORD=${DB_PASSWORD:-admin}
 export DB_NAME=${DB_NAME:-erpnext}
 
 # Aller dans le répertoire de travail
-cd /home/frappe/erpnext-app
+cd /home/frappe
 
 # Initialiser frappe-bench si pas encore fait
 if [ ! -d "frappe-bench" ]; then
