@@ -27,6 +27,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Installer Yarn
 RUN npm install -g yarn
 
+# Installer les dépendances Node.js manquantes
+RUN npm install -g less@^4.0.0 stylus@^0.60.0 vue-template-compiler@^2.6.0
+
 # Créer utilisateur frappe
 RUN useradd -m -s /bin/bash frappe
 

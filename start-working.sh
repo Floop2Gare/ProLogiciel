@@ -35,6 +35,10 @@ fi
 echo "🔧 Installation d'ERPNext sur le site..."
 bench --site erpnext.railway.app install-app erpnext
 
+# Construire les assets si nécessaire
+echo "🏗️ Construction des assets..."
+bench build --force
+
 # Démarrer le serveur
 echo "✅ ERPNext prêt ! Démarrage du serveur..."
 bench start --port 8000 --host 0.0.0.0
