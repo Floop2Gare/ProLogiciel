@@ -10,8 +10,8 @@ Ce projet contient une configuration ERPNext prête pour le déploiement.
 
 ### Installation
 ```bash
-git clone https://github.com/VOTRE-USERNAME/erpnext-deploy.git
-cd erpnext-deploy
+git clone https://github.com/VOTRE-USERNAME/ProLogiciel.git
+cd ProLogiciel
 docker compose -f dev-pwd.yml up -d
 ```
 
