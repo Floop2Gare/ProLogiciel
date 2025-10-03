@@ -13,7 +13,7 @@ from erpnext.setup.doctype.incoterm.incoterm import create_incoterms
 from .default_success_action import get_default_success_action
 
 default_mail_footer = """<div style="padding: 7px; text-align: right; color: #888"><small>Sent via
-	<a style="color: #888" href="http://frappe.io/erpnext">ERPNext</a></div>"""
+	<a style="color: #888" href="https://github.com/VOTRE-USERNAME/ProLogiciel">ProLogiciel</a></div>"""
 
 
 def after_install():
@@ -157,7 +157,7 @@ def add_standard_navbar_items():
 		{
 			"item_label": "Documentation",
 			"item_type": "Route",
-			"route": "https://docs.erpnext.com/",
+			"route": "https://github.com/VOTRE-USERNAME/ProLogiciel",
 			"is_standard": 1,
 		},
 		{
@@ -205,7 +205,7 @@ def add_standard_navbar_items():
 
 
 def add_app_name():
-	frappe.db.set_single_value("System Settings", "app_name", "ERPNext")
+	frappe.db.set_single_value("System Settings", "app_name", "ProLogiciel")
 
 
 def update_roles():
