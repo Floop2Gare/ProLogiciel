@@ -1,0 +1,2 @@
+frappe-bench==5.0.0
+erpnext==15.0.0

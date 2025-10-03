@@ -1,212 +1,39 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  backend:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_NAME: ${DB_NAME:-erpnext}
-      DB_USER: ${DB_USER:-root}
-      DB_PASSWORD: ${DB_PASSWORD:-admin}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-admin}
-      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-admin}
-
-  configurator:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: "no"
-    entrypoint:
-      - bash
-      - -c
-    command:
-      - >
-        ls -1 apps > sites/apps.txt;
-        bench set-config -g db_host $$DB_HOST;
-        bench set-config -gp db_port $$DB_PORT;
-        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
-        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
-        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
-        bench set-config -gp socketio_port $$SOCKETIO_PORT;
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-
-  create-site:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: "no"
-    entrypoint:
-      - bash
-      - -c
-    command:
-      - >
-        wait-for-it -t 120 $$DB_HOST:$$DB_PORT;
-        wait-for-it -t 120 $$REDIS_QUEUE:6379;
-        wait-for-it -t 120 $$REDIS_CACHE:6379;
-        bench new-site --admin-password admin --mariadb-root-password $$DB_PASSWORD --install-app erpnext --set-default $$SITE_NAME;
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_PASSWORD: ${DB_PASSWORD:-admin}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SITE_NAME: ${SITE_NAME:-erpnext.localhost}
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-
-  frontend:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-
-  websocket:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-
-  worker-short:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-    command:
-      - bench
-      - worker
-      - --queue
-      - short
-
-  worker-long:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-    command:
-      - bench
-      - worker
-      - --queue
-      - long
-
-  scheduler:
-    image: frappe/erpnext:v15.81.1
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
-      - ../erpnext-develop:/home/frappe/frappe-bench/apps/erpnext
-    environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      REDIS_CACHE: redis-cache:6379
-      REDIS_QUEUE: redis-queue:6379
-      SOCKETIO_PORT: "9000"
-    command:
-      - bench
-      - schedule
-
   db:
     image: mariadb:10.6
-    networks:
-      - frappe_network
-    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-admin}
-      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-admin}
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: erpnext
+      MYSQL_USER: erpnext
+      MYSQL_PASSWORD: admin
     volumes:
-      - db-data:/var/lib/mysql
-    # Commenté pour Railway (utilise PostgreSQL externe)
-    # ports:
-    #   - "3306:3306"
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
 
-  redis-cache:
-    image: redis:6.2-alpine
-    networks:
-      - frappe_network
-    restart: unless-stopped
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+  erpnext:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=erpnext
+      - DB_PASSWORD=admin
+      - DB_NAME=erpnext
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
     volumes:
-      - redis-cache-data:/data
-
-  redis-queue:
-    image: redis:6.2-alpine
-    networks:
-      - frappe_network
-    restart: unless-stopped
-    volumes:
-      - redis-queue-data:/data
-
-networks:
-  frappe_network:
-    driver: bridge
+      - erpnext_data:/home/frappe/frappe-bench
 
 volumes:
-  sites:
-  logs:
-  db-data:
-  redis-cache-data:
-  redis-queue-data:
+  db_data:
+  erpnext_data:

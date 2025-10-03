@@ -1,0 +1,189 @@
+#!/bin/bash
+
+# ========================================
+#    ERPNext Mac Installer
+#    Application graphique pour Mac
+# ========================================
+
+# Variables
+APP_NAME="ERPNext"
+INSTALL_DIR="$HOME/ERPNext"
+DESKTOP_DIR="$HOME/Desktop"
+
+# Fonction pour afficher des dialogues
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\""
+}
+
+show_confirm() {
+    osascript -e "display dialog \"$1\" buttons {\"Oui\", \"Non\"} default button \"Oui\""
+}
+
+# Fonction pour vérifier les permissions
+check_permissions() {
+    # Vérifier si on peut écrire dans le répertoire home
+    if [ ! -w "$HOME" ]; then
+        show_dialog "Erreur : Pas de permissions d'écriture dans le répertoire utilisateur"
+        exit 1
+    fi
+}
+
+# Fonction pour installer Homebrew
+install_homebrew() {
+    show_dialog "Installation de Homebrew (gestionnaire de paquets Mac)..."
+    
+    if ! command -v brew &> /dev/null; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # Ajouter au PATH pour Apple Silicon
+        if [[ $(uname -m) == "arm64" ]]; then
+            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
+    fi
+}
+
+# Fonction pour installer les dépendances
+install_dependencies() {
+    show_dialog "Installation des dépendances (Python, Node.js, MariaDB)..."
+    
+    # Python 3.11
+    brew install python@3.11
+    
+    # Node.js
+    brew install node
+    
+    # Git
+    brew install git
+    
+    # MariaDB
+    brew install mariadb
+    
+    # Redis
+    brew install redis
+}
+
+# Fonction pour configurer la base de données
+setup_database() {
+    show_dialog "Configuration de la base de données..."
+    
+    # Démarrer MariaDB
+    brew services start mariadb
+    sleep 3
+    
+    # Configurer la base de données
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS erpnext;"
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'erpnext'@'localhost' IDENTIFIED BY 'admin';"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON erpnext.* TO 'erpnext'@'localhost';"
+    mysql -u root -e "FLUSH PRIVILEGES;"
+}
+
+# Fonction pour installer ERPNext
+install_erpnext() {
+    show_dialog "Installation d'ERPNext..."
+    
+    # Créer le répertoire
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    
+    # Installer frappe-bench
+    pip3 install frappe-bench
+    
+    # Initialiser frappe-bench
+    bench init frappe-bench --frappe-branch version-15 --python python3.11
+    
+    cd frappe-bench
+    
+    # Installer ERPNext
+    bench get-app erpnext --branch version-15
+    
+    # Créer le site
+    bench new-site erpnext.localhost --admin-password admin --db-root-password admin --mariadb-root-password admin
+    
+    # Installer ERPNext sur le site
+    bench --site erpnext.localhost install-app erpnext
+}
+
+# Fonction pour créer les scripts
+create_scripts() {
+    show_dialog "Création des scripts de démarrage..."
+    
+    # Script de démarrage
+    cat > "$INSTALL_DIR/start-erpnext.sh" << 'EOF'
+#!/bin/bash
+echo "🚀 Démarrage d'ERPNext..."
+
+# Démarrer les services
+brew services start mariadb
+brew services start redis
+
+# Attendre
+sleep 3
+
+# Démarrer ERPNext
+cd ~/ERPNext/frappe-bench
+bench start
+EOF
+
+    # Script d'arrêt
+    cat > "$INSTALL_DIR/stop-erpnext.sh" << 'EOF'
+#!/bin/bash
+echo "🛑 Arrêt d'ERPNext..."
+
+# Arrêter les services
+brew services stop mariadb
+brew services stop redis
+
+echo "✅ ERPNext arrêté !"
+EOF
+
+    # Rendre exécutables
+    chmod +x "$INSTALL_DIR/start-erpnext.sh"
+    chmod +x "$INSTALL_DIR/stop-erpnext.sh"
+}
+
+# Fonction pour créer le raccourci
+create_shortcut() {
+    show_dialog "Création du raccourci sur le Bureau..."
+    
+    # Raccourci sur le Bureau
+    cat > "$DESKTOP_DIR/ERPNext.command" << 'EOF'
+#!/bin/bash
+cd ~/ERPNext
+./start-erpnext.sh
+EOF
+    
+    chmod +x "$DESKTOP_DIR/ERPNext.command"
+}
+
+# Fonction principale
+main() {
+    # Vérifier les permissions
+    check_permissions
+    
+    # Demander confirmation
+    if ! show_confirm "Installer ERPNext sur ce Mac ?\n\nCela va installer :\n- Homebrew\n- Python 3.11\n- Node.js\n- MariaDB\n- Redis\n\nContinuer ?"; then
+        show_dialog "Installation annulée"
+        exit 0
+    fi
+    
+    # Installation
+    install_homebrew
+    install_dependencies
+    setup_database
+    install_erpnext
+    create_scripts
+    create_shortcut
+    
+    # Message de fin
+    show_dialog "🎉 Installation terminée !\n\nERPNext est maintenant installé.\n\nPour démarrer :\n- Double-cliquez sur 'ERPNext.command' sur le Bureau\n- Ou exécutez : cd ~/ERPNext && ./start-erpnext.sh\n\nURL : http://localhost:8000\nUtilisateur : Administrator\nMot de passe : admin"
+    
+    # Proposer de démarrer
+    if show_confirm "Voulez-vous démarrer ERPNext maintenant ?"; then
+        cd "$INSTALL_DIR"
+        ./start-erpnext.sh
+    fi
+}
+
+# Exécuter le script principal
+main
