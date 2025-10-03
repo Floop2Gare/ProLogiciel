@@ -20,6 +20,6 @@ def execute():
 
 	click.secho(
 		"Region Saudi Arabia(KSA) is moved to a separate app"
-		"Please install the app to continue using the module: https://github.com/8848digital/KSA",
+		"Please install the app to continue using the module: ProLogiciel KSA module",
 		fg="yellow",
 	)

@@ -25,6 +25,6 @@ def execute():
 
 	click.secho(
 		"ECommerce is renamed and moved to a separate app"
-		"Please install the app for ECommerce features: https://github.com/frappe/webshop",
+		"Please install the app for ECommerce features: ProLogiciel Webshop module",
 		fg="yellow",
 	)

@@ -12,6 +12,6 @@ def execute():
 
 	click.secho(
 		"Taxjar Integration is moved to a separate app"
-		"Please install the app to continue using the module: https://github.com/frappe/taxjar_integration",
+		"Please install the app to continue using the module: ProLogiciel Taxjar module",
 		fg="yellow",
 	)

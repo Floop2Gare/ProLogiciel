@@ -146,7 +146,7 @@ class Location(NestedSet):
 def compute_area(features):
 	"""
 	Calculate the total area for a set of location features.
-	Reference from https://github.com/scisco/area.
+	Reference from ProLogiciel area calculation.
 
 	Args:
 	        `features` (list of dict): Features marked on the map as
